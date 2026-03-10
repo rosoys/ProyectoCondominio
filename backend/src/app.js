@@ -1,18 +1,20 @@
-import 'dotenv/config'
-import express, { json } from 'express'
-import cookieParser from 'cookie-parser'
-import { enrutadorTickets } from './routes/tickets.js'
-import { middlewareCors } from './middlewares/cors.js'
-import { PORT } from './config/config.js'
+import 'dotenv/config';
+import express, { json } from 'express';
+import cookieParser from 'cookie-parser';
+import { enrutadorTickets } from './routes/tickets.js';
+import { enrutadorParqueos } from './routes/parqueos.js';
+import { middlewareCors } from './middlewares/cors.js';
+import { PORT } from './config/config.js';
 
-const aplicacion = express()
-aplicacion.use(json())
-aplicacion.use(cookieParser())
-aplicacion.use(middlewareCors())
-aplicacion.disable('x-powered-by')
+const aplicacion = express();
+aplicacion.use(json());
+aplicacion.use(cookieParser());
+aplicacion.use(middlewareCors());
+aplicacion.disable('x-powered-by');
 
-aplicacion.use('/tickets', enrutadorTickets)
+aplicacion.use('/tickets', enrutadorTickets);
+aplicacion.use('/parqueos', enrutadorParqueos);
 
 aplicacion.listen(PORT, () => {
-  console.log(`Servidor escuchando en http://localhost:${PORT}`)
-})
+	console.log(`Servidor escuchando en http://localhost:${PORT}`);
+});
