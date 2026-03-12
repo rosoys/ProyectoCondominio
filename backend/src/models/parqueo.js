@@ -1,5 +1,6 @@
 import oracledb from 'oracledb';
 import { conectar } from '../config/db.js';
+import { ca } from 'zod/v4/locales';
 
 const consultaBase = `
   SELECT
@@ -7,24 +8,23 @@ const consultaBase = `
     p.ID_PROPIEDAD,
     p.NUMERO_PARQUEO,
     p.DESCRIPCION,
-    p.ACTIVO,
-    p.NOMBRE AS PRIORIDAD,
-    pr.NUMERO_PROPIEDAD
-	FROM PARQUEO p;
+    p.ACTIVO
+	FROM PARQUEO p
 `;
 
 export class ParqueoModel {
 	static async obtenerTodos() {
 		const conexion = await conectar();
 		try {
-			const resultado = await conexion.execute(
-				consultaBase,
-				{},
-				{
-					outFormat: oracledb.OUT_FORMAT_OBJECT,
-				},
-			);
+			const parametros = {};
+
+			const resultado = await conexion.execute(consultaBase, parametros, {
+				outFormat: oracledb.OUT_FORMAT_OBJECT,
+			});
 			return resultado.rows;
+		} catch (error) {
+			console.error('Error al obtener todos los parqueos:', error);
+			throw error;
 		} finally {
 			await conexion.close();
 		}
@@ -34,7 +34,7 @@ export class ParqueoModel {
 		const conexion = await conectar();
 		try {
 			const resultado = await conexion.execute(
-				consultaBase + ' WHERE p.NUMERO_PARQUEO = :numero',
+				consultaBase + ' WHERE p.ID_PARQUEO = :numero',
 				{ numero },
 				{ outFormat: oracledb.OUT_FORMAT_OBJECT },
 			);
@@ -48,7 +48,6 @@ export class ParqueoModel {
 		const conexion = await conectar();
 		try {
 			const { idPropiedad, numeroParqueo, descripcion, activo } = datos;
-
 			const resultado = await conexion.execute(
 				`INSERT INTO PARQUEO
 				(ID_PROPIEDAD, NUMERO_PARQUEO, DESCRIPCION, ACTIVO) 
@@ -59,10 +58,13 @@ export class ParqueoModel {
 					idPropiedad,
 					numeroParqueo,
 					descripcion,
-					activo: 1,
+					activo,
+					idParqueo: { type: oracledb.NUMBER, dir: oracledb.BIND_OUT },
 				},
 				{ autoCommit: true },
 			);
+			const nuevoId = resultado.outBinds.idParqueo[0];
+			return ParqueoModel.obtenerPorNumero({ numero: nuevoId });
 		} finally {
 			await conexion.close();
 		}
@@ -84,6 +86,9 @@ export class ParqueoModel {
 			for (const [claveCamel, columnaOracle] of Object.entries(camposPermitidos)) {
 				if (datos[claveCamel] !== undefined) {
 					setCampos.push(`${columnaOracle} = :${claveCamel}`);
+					const esFecha = claveCamel.startsWith('fecha');
+					parametros[claveCamel] =
+						esFecha && datos[claveCamel] ? new Date(datos[claveCamel]) : datos[claveCamel];
 				}
 			}
 
@@ -95,7 +100,7 @@ export class ParqueoModel {
 				{ autoCommit: true },
 			);
 
-			return ParqueoModel.obtenerPorNumero({ id });
+			return ParqueoModel.obtenerPorNumero({ numero: id });
 		} finally {
 			await conexion.close();
 		}

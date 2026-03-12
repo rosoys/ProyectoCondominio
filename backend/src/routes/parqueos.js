@@ -20,5 +20,5 @@ enrutadorParqueos.get(
 	verificarRol('Administrador', 'Guardia', 'Colaborador'),
 	ParqueoController.obtenerPorId,
 );
-enrutadorParqueos.patch('/:id', verificarRol('Administrador'), ParqueoController.actualizar);
+enrutadorParqueos.put('/:id', verificarRol('Administrador'), ParqueoController.actualizar);
 enrutadorParqueos.delete('/:id', verificarRol('Administrador'), ParqueoController.eliminar);

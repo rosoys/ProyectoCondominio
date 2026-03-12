@@ -15,9 +15,7 @@ const esquemaParqueo = z.object({
 			invalid_type_error: 'numeroParqueo debe ser alfanumerico.',
 		})
 		.min(1)
-		.max(20)
-		.int()
-		.positive(),
+		.max(20),
 
 	descripcion: z
 		.string({
